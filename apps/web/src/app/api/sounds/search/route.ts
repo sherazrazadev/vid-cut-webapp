@@ -215,10 +215,25 @@ export async function GET(request: NextRequest) {
 		const baseUrl = "https://freesound.org/apiv2/search/text/";
 
 		const sortParam = buildSortParameter({ query, sort });
+		const token = webEnv.FREESOUND_API_KEY;
+		if (!token) {
+			return NextResponse.json(
+				{
+					results: [],
+					count: 0,
+					next: null,
+					previous: null,
+					disabled: true,
+					message:
+						"Sound search is disabled. Set FREESOUND_API_KEY to enable Freesound.",
+				},
+				{ status: 200 },
+			);
+		}
 
 		const params = new URLSearchParams({
 			query: query || "",
-			token: webEnv.FREESOUND_API_KEY,
+			token,
 			page: page.toString(),
 			page_size: pageSize.toString(),
 			sort: sortParam,

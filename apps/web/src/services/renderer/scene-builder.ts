@@ -118,7 +118,6 @@ function buildTrackNodes({
 					new TextNode({
 						...element,
 						transform: buildTransformFromParams({ params: element.params }),
-						scaleMode: readScaleModeFromParams({ params: element.params }),
 						opacity: readOpacityFromParams({ params: element.params }),
 						blendMode: readBlendModeFromParams({ params: element.params }),
 						canvasCenter: { x: canvasSize.width / 2, y: canvasSize.height / 2 },

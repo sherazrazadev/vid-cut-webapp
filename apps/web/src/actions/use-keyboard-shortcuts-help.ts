@@ -58,7 +58,6 @@ export function useKeyboardShortcutsHelp() {
 		for (const action of Object.keys(ACTIONS)) {
 			if (!isActionWithOptionalArgs(action)) continue;
 			const actionDef = ACTIONS[action];
-			if (actionDef.category === "assets") continue;
 			result.push({
 				id: action,
 				keys: actionToKeys.get(action) ?? [],
