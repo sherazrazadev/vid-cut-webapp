@@ -26,6 +26,7 @@ import type {
 	TextureUploadDescriptor,
 } from "./types";
 import { DEFAULT_GRAPHIC_SOURCE_SIZE } from "@/graphics";
+import { getBaseScaleFactors } from "@/rendering/scale-mode";
 
 export async function buildFrameDescriptor({
 	node,
@@ -335,12 +336,16 @@ function computeVisualTransform({
 	sourceWidth: number;
 	sourceHeight: number;
 }): QuadTransformDescriptor {
-	const containScale = Math.min(
-		renderer.width / sourceWidth,
-		renderer.height / sourceHeight,
-	);
-	const scaledWidth = sourceWidth * containScale * resolved.transform.scaleX;
-	const scaledHeight = sourceHeight * containScale * resolved.transform.scaleY;
+	const baseScale = getBaseScaleFactors({
+		mode: resolved.scaleMode ?? "fit",
+		canvasWidth: renderer.width,
+		canvasHeight: renderer.height,
+		sourceWidth,
+		sourceHeight,
+	});
+	const scaledWidth = sourceWidth * baseScale.scaleX * resolved.transform.scaleX;
+	const scaledHeight =
+		sourceHeight * baseScale.scaleY * resolved.transform.scaleY;
 	const absWidth = Math.abs(scaledWidth);
 	const absHeight = Math.abs(scaledHeight);
 

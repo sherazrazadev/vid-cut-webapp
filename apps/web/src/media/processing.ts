@@ -124,6 +124,7 @@ export async function processMediaAssets({
 		let height: number | undefined;
 		let fps: number | undefined;
 		let hasAudio: boolean | undefined;
+		let codec: string | undefined;
 
 		try {
 			if (fileType === "image") {
@@ -141,6 +142,7 @@ export async function processMediaAssets({
 						? Math.round(videoData.fps)
 						: undefined;
 					hasAudio = videoData.hasAudio;
+					codec = videoData.codec ?? undefined;
 					thumbnailUrl = videoData.thumbnailUrl ?? undefined;
 
 					if (!videoData.canDecode) {
@@ -175,6 +177,7 @@ export async function processMediaAssets({
 				height,
 				fps,
 				hasAudio,
+				codec,
 			});
 
 			await new Promise((resolve) => setTimeout(resolve, 0));

@@ -176,27 +176,36 @@ function ShortcutItem({
 				<span className="text-sm">{shortcut.description}</span>
 			</div>
 			<div className="flex items-center gap-2">
-				{displayKeys.map((key: string, index: number) => (
-					<div key={key} className="flex items-center gap-2">
-						<div className="flex items-center gap-1">
-							{key.split("+").map((keyPart: string, partIndex: number) => {
-								const keyId = `${shortcut.id}-${index}-${partIndex}`;
-								return (
-									<EditableShortcutKey
-										key={keyId}
-										isRecording={isRecording}
-										onStartRecording={() => onStartRecording({ shortcut })}
-									>
-										{keyPart}
-									</EditableShortcutKey>
-								);
-							})}
+				{displayKeys.length === 0 ? (
+					<EditableShortcutKey
+						isRecording={isRecording}
+						onStartRecording={() => onStartRecording({ shortcut })}
+					>
+						None
+					</EditableShortcutKey>
+				) : (
+					displayKeys.map((key: string, index: number) => (
+						<div key={key} className="flex items-center gap-2">
+							<div className="flex items-center gap-1">
+								{key.split("+").map((keyPart: string, partIndex: number) => {
+									const keyId = `${shortcut.id}-${index}-${partIndex}`;
+									return (
+										<EditableShortcutKey
+											key={keyId}
+											isRecording={isRecording}
+											onStartRecording={() => onStartRecording({ shortcut })}
+										>
+											{keyPart}
+										</EditableShortcutKey>
+									);
+								})}
+							</div>
+							{index < displayKeys.length - 1 && (
+								<span className="text-muted-foreground text-xs">or</span>
+							)}
 						</div>
-						{index < displayKeys.length - 1 && (
-							<span className="text-muted-foreground text-xs">or</span>
-						)}
-					</div>
-				))}
+					))
+				)}
 			</div>
 		</div>
 	);

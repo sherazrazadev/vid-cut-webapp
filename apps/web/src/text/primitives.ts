@@ -145,6 +145,8 @@ export function drawMeasuredTextLayout({
 	background,
 	backgroundColor,
 	textBaseline = "middle",
+	stroke,
+	shadow,
 }: {
 	ctx: TextCanvasContext;
 	layout: MeasuredTextLayout;
@@ -152,6 +154,14 @@ export function drawMeasuredTextLayout({
 	background?: ResolvedTextBackgroundLike | null;
 	backgroundColor?: string;
 	textBaseline?: CanvasTextBaseline;
+	stroke?: { enabled: boolean; color: string; width: number } | null;
+	shadow?: {
+		enabled: boolean;
+		color: string;
+		blur: number;
+		offsetX: number;
+		offsetY: number;
+	} | null;
 }): void {
 	ctx.font = layout.fontString;
 	ctx.textAlign = layout.textAlign;
@@ -197,6 +207,27 @@ export function drawMeasuredTextLayout({
 		}
 	}
 
+	const applyShadow = Boolean(shadow?.enabled);
+	if (applyShadow && shadow) {
+		ctx.shadowColor = shadow.color;
+		ctx.shadowBlur = Math.max(0, shadow.blur);
+		ctx.shadowOffsetX = shadow.offsetX;
+		ctx.shadowOffsetY = shadow.offsetY;
+	}
+
+	const strokeWidth = stroke?.enabled ? Math.max(0, stroke.width) : 0;
+	if (strokeWidth > 0 && stroke) {
+		ctx.strokeStyle = stroke.color;
+		ctx.lineWidth = strokeWidth;
+		ctx.lineJoin = "round";
+		ctx.lineCap = "round";
+		for (let index = 0; index < layout.lines.length; index++) {
+			const lineY =
+				index * layout.lineHeightPx - layout.block.visualCenterOffset;
+			ctx.strokeText(layout.lines[index], 0, lineY);
+		}
+	}
+
 	for (let index = 0; index < layout.lines.length; index++) {
 		const lineY = index * layout.lineHeightPx - layout.block.visualCenterOffset;
 		ctx.fillText(layout.lines[index], 0, lineY);
@@ -209,6 +240,13 @@ export function drawMeasuredTextLayout({
 			scaledFontSize: layout.scaledFontSize,
 			textAlign: layout.textAlign,
 		});
+	}
+
+	if (applyShadow) {
+		ctx.shadowColor = "transparent";
+		ctx.shadowBlur = 0;
+		ctx.shadowOffsetX = 0;
+		ctx.shadowOffsetY = 0;
 	}
 }
 

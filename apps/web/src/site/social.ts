@@ -1,5 +1,10 @@
+/**
+ * Public profile URLs. Empty string = hide in UI until accounts exist.
+ */
 export const SOCIAL_LINKS = {
-	x: "https://x.com/opencutapp",
-	github: "https://github.com/OpenCut-app/OpenCut",
-	discord: "https://discord.com/invite/Mu3acKZvCp",
+	x: "",
+	github: "",
+	discord: "",
 };
+
+export const CONTACT_EMAIL = "";

@@ -1,6 +1,7 @@
 import type { EditorCore } from "@/core";
 import type { RootNode } from "@/services/renderer/nodes/root-node";
 import type { ExportOptions, ExportResult } from "@/export";
+import { getDefaultVideoCodec, scaleExportResolution } from "@/export";
 import { CanvasRenderer } from "@/services/renderer/canvas-renderer";
 import { SceneExporter } from "@/services/renderer/scene-exporter";
 import { buildScene } from "@/services/renderer/scene-builder";
@@ -147,55 +148,76 @@ export class RendererManager {
 		onProgress?: ({ progress }: { progress: number }) => void;
 		onCancel?: () => boolean;
 	}): Promise<ExportResult> {
-		const { format, quality, fps, includeAudio } = options;
+			const {
+				format,
+				quality,
+				fps,
+				includeAudio,
+				audioOnly,
+				resolution,
+				videoCodec,
+			} = options;
 
-		try {
-			const tracks = this.editor.scenes.getActiveScene().tracks;
-			const mediaAssets = this.editor.media.getAssets();
-			const activeProject = this.editor.project.getActive();
+			try {
+				const tracks = this.editor.scenes.getActiveScene().tracks;
+				const mediaAssets = this.editor.media.getAssets();
+				const activeProject = this.editor.project.getActive();
 
-			if (!activeProject) {
-				return { success: false, error: "No active project" };
-			}
+				if (!activeProject) {
+					return { success: false, error: "No active project" };
+				}
 
-			const duration = this.editor.timeline.getTotalDuration();
-			if (duration === 0) {
-				return { success: false, error: "Project is empty" };
-			}
+				const duration = this.editor.timeline.getTotalDuration();
+				if (duration === 0) {
+					return { success: false, error: "Project is empty" };
+				}
 
-			const exportFps = fps ?? activeProject.settings.fps;
-			const canvasSize = activeProject.settings.canvasSize;
+				const exportFps = fps ?? activeProject.settings.fps;
+				const canvasSize = activeProject.settings.canvasSize;
+				const outputSize = scaleExportResolution({
+					width: canvasSize.width,
+					height: canvasSize.height,
+					resolution: resolution ?? "project",
+				});
+				const shouldIncludeAudio = audioOnly ? true : !!includeAudio;
 
-			let audioBuffer: AudioBuffer | null = null;
-			if (includeAudio) {
-				onProgress?.({ progress: 0.05 });
-				audioBuffer = await createTimelineAudioBuffer({
+				let audioBuffer: AudioBuffer | null = null;
+				if (shouldIncludeAudio) {
+					onProgress?.({ progress: 0.05 });
+					audioBuffer = await createTimelineAudioBuffer({
+						tracks,
+						mediaAssets,
+						duration,
+					});
+					if (audioOnly && !audioBuffer) {
+						return { success: false, error: "No audio to export" };
+					}
+				}
+
+				const scene = buildScene({
 					tracks,
 					mediaAssets,
 					duration,
+					canvasSize,
+					background: activeProject.settings.background,
 				});
-			}
 
-			const scene = buildScene({
-				tracks,
-				mediaAssets,
-				duration,
-				canvasSize,
-				background: activeProject.settings.background,
-			});
-
-			const exporter = new SceneExporter({
-				width: canvasSize.width,
-				height: canvasSize.height,
-				fps: exportFps,
-				format,
-				quality,
-				shouldIncludeAudio: !!includeAudio,
-				audioBuffer: audioBuffer || undefined,
-			});
+				const exporter = new SceneExporter({
+					width: canvasSize.width,
+					height: canvasSize.height,
+					outputWidth: outputSize.width,
+					outputHeight: outputSize.height,
+					fps: exportFps,
+					format,
+					quality,
+					videoCodec: videoCodec ?? getDefaultVideoCodec({ format }),
+					shouldIncludeAudio,
+					audioOnly: !!audioOnly,
+					audioBuffer: audioBuffer || undefined,
+				});
 
 			exporter.on("progress", (progress) => {
-				const adjustedProgress = includeAudio
+				const adjustedProgress = shouldIncludeAudio
 					? 0.05 + progress * 0.95
 					: progress;
 				onProgress?.({ progress: adjustedProgress });

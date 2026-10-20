@@ -18,6 +18,8 @@ import type {
 	PreviewOverlayInstance,
 } from "@/preview/overlays";
 import { PreviewContextMenu } from "./context-menu";
+import { usePreviewStore } from "@/preview/preview-store";
+import { getPreviewMaxImageSize } from "@/preview/quality";
 import { PreviewToolbar } from "./toolbar";
 import {
 	PreviewViewportProvider,
@@ -99,6 +101,7 @@ function RenderTreeController() {
 	);
 	const mediaAssets = useEditor((e) => e.media.getAssets());
 	const activeProject = useEditor((e) => e.project.getActive());
+	const previewQuality = usePreviewStore((state) => state.previewQuality);
 
 	const { width, height } = usePreviewSize();
 
@@ -113,10 +116,18 @@ function RenderTreeController() {
 			canvasSize: { width, height },
 			background: activeProject.settings.background,
 			isPreview: true,
+			previewMaxImageSize: getPreviewMaxImageSize({ quality: previewQuality }),
 		});
 
 		editor.renderer.setRenderTree({ renderTree });
-	}, [tracks, mediaAssets, activeProject?.settings.background, width, height]);
+	}, [
+		tracks,
+		mediaAssets,
+		activeProject?.settings.background,
+		width,
+		height,
+		previewQuality,
+	]);
 
 	return null;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TransitionTopIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -18,14 +18,24 @@ import {
 	getExportMimeType,
 	getExportFileExtension,
 	downloadBuffer,
-} from "@/export";
-import { Check, Copy, Download, RotateCcw } from "lucide-react";
-import {
+	EXPORT_RESOLUTION_OPTIONS,
 	EXPORT_FORMAT_VALUES,
 	EXPORT_QUALITY_VALUES,
+	isExportResolution,
 	type ExportFormat,
 	type ExportQuality,
+	type ExportResolution,
+	type ExportVideoCodec,
 } from "@/export";
+import { Check, Copy, Download, RotateCcw } from "lucide-react";
+import { FPS_PRESETS } from "@/fps/presets";
+import { floatToFrameRate, frameRateToFloat } from "@/fps/utils";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+} from "@/components/ui/select";
 import {
 	Section,
 	SectionContent,
@@ -107,19 +117,57 @@ function ExportPopover({
 	const [quality, setQuality] = useState<ExportQuality>(
 		DEFAULT_EXPORT_OPTIONS.quality,
 	);
+	const [resolution, setResolution] = useState<ExportResolution>(
+		DEFAULT_EXPORT_OPTIONS.resolution ?? "1080p",
+	);
+	const [videoCodec, setVideoCodec] = useState<ExportVideoCodec>(
+		DEFAULT_EXPORT_OPTIONS.videoCodec ?? "avc",
+	);
+	const [fpsPreset, setFpsPreset] = useState<string>("project");
 	const [shouldIncludeAudio, setShouldIncludeAudio] = useState<boolean>(
 		DEFAULT_EXPORT_OPTIONS.includeAudio ?? true,
 	);
+	const [audioOnly, setAudioOnly] = useState<boolean>(
+		DEFAULT_EXPORT_OPTIONS.audioOnly ?? false,
+	);
+	const [optionalCodecs, setOptionalCodecs] = useState<{
+		hevc: boolean;
+		av1: boolean;
+	}>({ hevc: false, av1: false });
+
+	useEffect(() => {
+		let cancelled = false;
+		void import("mediabunny").then(({ getEncodableVideoCodecs }) =>
+			getEncodableVideoCodecs(["hevc", "av1"]).then((codecs) => {
+				if (cancelled) return;
+				setOptionalCodecs({
+					hevc: codecs.includes("hevc"),
+					av1: codecs.includes("av1"),
+				});
+			}),
+		);
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	const handleExport = async () => {
 		if (!activeProject) return;
+
+		const exportFps =
+			fpsPreset === "project"
+				? activeProject.settings.fps
+				: floatToFrameRate(Number(fpsPreset));
 
 		const result = await editor.project.export({
 			options: {
 				format,
 				quality,
-				fps: activeProject.settings.fps,
-				includeAudio: shouldIncludeAudio,
+				fps: exportFps,
+				includeAudio: audioOnly ? true : shouldIncludeAudio,
+				audioOnly,
+				resolution,
+				videoCodec,
 			},
 		});
 
@@ -131,8 +179,8 @@ function ExportPopover({
 		if (result.success && result.buffer) {
 			downloadBuffer({
 				buffer: result.buffer,
-				filename: `${activeProject.metadata.name}${getExportFileExtension({ format })}`,
-				mimeType: getExportMimeType({ format }),
+				filename: `${activeProject.metadata.name}${getExportFileExtension({ format, audioOnly })}`,
+				mimeType: getExportMimeType({ format, audioOnly }),
 			});
 
 			editor.project.clearExportState();
@@ -173,32 +221,126 @@ function ExportPopover({
 										</SectionHeader>
 										<SectionContent>
 											<RadioGroup
-												value={format}
+												value={`${format}:${videoCodec}`}
 												onValueChange={(value) => {
-													if (isExportFormat(value)) {
-														setFormat(value);
+													const [nextFormat, nextCodec] = value.split(":");
+													if (
+														isExportFormat(nextFormat) &&
+														(nextCodec === "avc" ||
+															nextCodec === "hevc" ||
+															nextCodec === "vp9" ||
+															nextCodec === "av1")
+													) {
+														setFormat(nextFormat);
+														setVideoCodec(nextCodec);
 													}
 												}}
 											>
 												<div className="flex items-center space-x-2">
-													<RadioGroupItem value="mp4" id="mp4" />
-													<Label htmlFor="mp4">
-														MP4 (H.264) - Better compatibility
+													<RadioGroupItem value="mp4:avc" id="mp4-avc" />
+													<Label htmlFor="mp4-avc">
+														MP4 (H.264) — Better compatibility
 													</Label>
 												</div>
+												{optionalCodecs.hevc && (
+													<div className="flex items-center space-x-2">
+														<RadioGroupItem value="mp4:hevc" id="mp4-hevc" />
+														<Label htmlFor="mp4-hevc">
+															MP4 (HEVC) — Smaller file, if the browser supports it
+														</Label>
+													</div>
+												)}
 												<div className="flex items-center space-x-2">
-													<RadioGroupItem value="webm" id="webm" />
-													<Label htmlFor="webm">
-														WebM (VP9) - Smaller file size
+													<RadioGroupItem value="webm:vp9" id="webm-vp9" />
+													<Label htmlFor="webm-vp9">
+														WebM (VP9) — Smaller file size
 													</Label>
 												</div>
+												{optionalCodecs.av1 && (
+													<div className="flex items-center space-x-2">
+														<RadioGroupItem value="webm:av1" id="webm-av1" />
+														<Label htmlFor="webm-av1">
+															WebM (AV1) — Smaller file, if the browser supports it
+														</Label>
+													</div>
+												)}
 											</RadioGroup>
 										</SectionContent>
 									</Section>
 
+									{!audioOnly && (
+										<Section collapsible defaultOpen={false}>
+											<SectionHeader>
+												<SectionTitle>Resolution</SectionTitle>
+											</SectionHeader>
+											<SectionContent>
+												<RadioGroup
+													value={resolution}
+													onValueChange={(value) => {
+														if (isExportResolution(value)) {
+															setResolution(value);
+														}
+													}}
+												>
+													{EXPORT_RESOLUTION_OPTIONS.map((option) => (
+														<div
+															key={option.value}
+															className="flex items-center space-x-2"
+														>
+															<RadioGroupItem
+																value={option.value}
+																id={`res-${option.value}`}
+															/>
+															<Label htmlFor={`res-${option.value}`}>
+																{option.label}
+															</Label>
+														</div>
+													))}
+												</RadioGroup>
+											</SectionContent>
+										</Section>
+									)}
+
+									{!audioOnly && (
+										<Section collapsible defaultOpen={false}>
+											<SectionHeader>
+												<SectionTitle>Frame rate</SectionTitle>
+											</SectionHeader>
+											<SectionContent>
+												<Select
+													value={fpsPreset}
+													onValueChange={setFpsPreset}
+												>
+													<SelectTrigger className="w-full">
+														{fpsPreset === "project"
+															? `Project (${Math.round(frameRateToFloat(activeProject.settings.fps))} fps)`
+															: `${fpsPreset} fps`}
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="project">
+															Project (
+															{Math.round(
+																frameRateToFloat(activeProject.settings.fps),
+															)}{" "}
+															fps)
+														</SelectItem>
+														{FPS_PRESETS.map((preset) => (
+															<SelectItem
+																key={preset.value}
+																value={preset.value}
+															>
+																{preset.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</SectionContent>
+										</Section>
+									)}
+
 									<Section collapsible defaultOpen={false}>
 										<SectionHeader>
-											<SectionTitle>Quality</SectionTitle>
+											<SectionTitle>Bitrate / quality</SectionTitle>
 										</SectionHeader>
 										<SectionContent>
 											<RadioGroup
@@ -236,17 +378,36 @@ function ExportPopover({
 											<SectionTitle>Audio</SectionTitle>
 										</SectionHeader>
 										<SectionContent>
-											<div className="flex items-center space-x-2">
-												<Checkbox
-													id="include-audio"
-													checked={shouldIncludeAudio}
-													onCheckedChange={(checked) =>
-														setShouldIncludeAudio(!!checked)
-													}
-												/>
-												<Label htmlFor="include-audio">
-													Include audio in export
-												</Label>
+											<div className="flex flex-col gap-2">
+												<div className="flex items-center space-x-2">
+													<Checkbox
+														id="include-audio"
+														checked={audioOnly ? true : shouldIncludeAudio}
+														disabled={audioOnly}
+														onCheckedChange={(checked) =>
+															setShouldIncludeAudio(!!checked)
+														}
+													/>
+													<Label htmlFor="include-audio">
+														Include audio in export
+													</Label>
+												</div>
+												<div className="flex items-center space-x-2">
+													<Checkbox
+														id="audio-only"
+														checked={audioOnly}
+														onCheckedChange={(checked) => {
+															const next = !!checked;
+															setAudioOnly(next);
+															if (next) {
+																setShouldIncludeAudio(true);
+															}
+														}}
+													/>
+													<Label htmlFor="audio-only">
+														Audio only (no video)
+													</Label>
+												</div>
 											</div>
 										</SectionContent>
 									</Section>

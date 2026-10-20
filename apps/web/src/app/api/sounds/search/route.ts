@@ -1,4 +1,5 @@
 import { webEnv } from "@/env/web";
+import { features } from "@/env/features";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit } from "@/auth/rate-limit";
@@ -149,6 +150,21 @@ function transformFreesoundResult(
 
 export async function GET(request: NextRequest) {
 	try {
+		if (!features.freesound) {
+			return NextResponse.json(
+				{
+					results: [],
+					count: 0,
+					next: null,
+					previous: null,
+					disabled: true,
+					message:
+						"Sound search is disabled. Set FREESOUND_API_KEY to enable Freesound.",
+				},
+				{ status: 200 },
+			);
+		}
+
 		const { limited } = await checkRateLimit({ request });
 		if (limited) {
 			return NextResponse.json({ error: "Too many requests" }, { status: 429 });

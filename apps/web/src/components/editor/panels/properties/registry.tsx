@@ -23,6 +23,8 @@ import {
 	DashboardSpeed02Icon,
 } from "@hugeicons/core-free-icons";
 import { ElementParamsTab } from "./components/element-params-tab";
+import { TransformFlipControls } from "./components/transform-flip-controls";
+import { AudioFadeControls } from "./components/audio-fade-controls";
 import { ClipEffectsTab, StandaloneEffectTab } from "@/effects/components/effects-tab";
 import { MasksTab } from "@/masks/components/masks-tab";
 import { SpeedTab } from "@/speed/components/speed-tab";
@@ -35,6 +37,7 @@ const TRANSFORM_PARAM_KEYS = [
 	"transform.scaleX",
 	"transform.scaleY",
 	"transform.rotate",
+	"transform.scaleMode",
 ] as const;
 
 const BLENDING_PARAM_KEYS = ["opacity", "blendMode"] as const;
@@ -57,6 +60,14 @@ const TEXT_PARAM_KEYS = [
 	"background.paddingY",
 	"background.offsetX",
 	"background.offsetY",
+	"stroke.enabled",
+	"stroke.color",
+	"stroke.width",
+	"shadow.enabled",
+	"shadow.color",
+	"shadow.blur",
+	"shadow.offsetX",
+	"shadow.offsetY",
 ] as const;
 
 export type TabContentProps = {
@@ -85,12 +96,15 @@ function buildTransformTab({
 		label: "Transform",
 		icon: <HugeiconsIcon icon={ArrowExpandIcon} size={16} />,
 		content: ({ trackId }) => (
-			<ElementParamsTab
-				element={element}
-				trackId={trackId}
-				paramKeys={TRANSFORM_PARAM_KEYS}
-				sectionKey="transform"
-			/>
+			<>
+				<ElementParamsTab
+					element={element}
+					trackId={trackId}
+					paramKeys={TRANSFORM_PARAM_KEYS}
+					sectionKey="transform"
+				/>
+				<TransformFlipControls elementId={element.id} />
+			</>
 		),
 	};
 }
@@ -125,12 +139,15 @@ function buildAudioTab({
 		label: "Audio",
 		icon: <HugeiconsIcon icon={MusicNote03Icon} size={16} />,
 		content: ({ trackId }) => (
-			<ElementParamsTab
-				element={element}
-				trackId={trackId}
-				paramKeys={AUDIO_PARAM_KEYS}
-				sectionKey="audio"
-			/>
+			<>
+				<ElementParamsTab
+					element={element}
+					trackId={trackId}
+					paramKeys={AUDIO_PARAM_KEYS}
+					sectionKey="audio"
+				/>
+				<AudioFadeControls element={element} trackId={trackId} />
+			</>
 		),
 	};
 }

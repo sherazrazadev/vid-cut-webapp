@@ -19,6 +19,7 @@ import { useKeyframeSelection } from "@/timeline/hooks/element/use-keyframe-sele
 import { getElementsAtTime, hasMediaId } from "@/timeline";
 import { cancelInteraction } from "@/editor/cancel-interaction";
 import { invokeAction } from "@/actions";
+import { useEditorChromeStore } from "@/editor/chrome-store";
 import { canToggleSourceAudio } from "@/timeline/audio-separation";
 import {
 	activateScope,
@@ -438,6 +439,28 @@ export function useEditorActions() {
 	);
 
 	useActionHandler(
+		"flip-horizontal-selected",
+		() => {
+			editor.timeline.flipElements({
+				elements: selectedElements,
+				axis: "horizontal",
+			});
+		},
+		undefined,
+	);
+
+	useActionHandler(
+		"flip-vertical-selected",
+		() => {
+			editor.timeline.flipElements({
+				elements: selectedElements,
+				axis: "vertical",
+			});
+		},
+		undefined,
+	);
+
+	useActionHandler(
 		"toggle-bookmark",
 		() => {
 			editor.scenes.toggleBookmark({ time: editor.playback.getCurrentTime() });
@@ -449,6 +472,17 @@ export function useEditorActions() {
 		"copy-selected",
 		() => {
 			editor.clipboard.copy();
+		},
+		undefined,
+	);
+
+	useActionHandler(
+		"cut-selected",
+		() => {
+			if (!editor.clipboard.copy()) {
+				return;
+			}
+			invokeAction("delete-selected");
 		},
 		undefined,
 	);
@@ -489,6 +523,23 @@ export function useEditorActions() {
 		"redo",
 		() => {
 			editor.command.redo();
+		},
+		undefined,
+	);
+
+	useActionHandler(
+		"open-shortcuts",
+		() => {
+			useEditorChromeStore.getState().setShortcutsOpen({ open: true });
+		},
+		undefined,
+	);
+
+	useActionHandler(
+		"toggle-history",
+		() => {
+			const { historyOpen, setHistoryOpen } = useEditorChromeStore.getState();
+			setHistoryOpen({ open: !historyOpen });
 		},
 		undefined,
 	);

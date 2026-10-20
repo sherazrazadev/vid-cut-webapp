@@ -15,6 +15,8 @@ export interface MediaDragData extends BaseDragData {
 export interface TextDragData extends BaseDragData {
 	type: "text";
 	content: string;
+	/** Optional full style payload for title presets. */
+	params?: Partial<ParamValues>;
 }
 
 export interface StickerDragData extends BaseDragData {

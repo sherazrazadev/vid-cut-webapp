@@ -2,7 +2,11 @@
 
 import { useMemo } from "react";
 import { useKeybindingsStore } from "@/actions/keybindings-store";
-import { ACTIONS, type TActionWithOptionalArgs } from "@/actions";
+import {
+	ACTIONS,
+	isActionWithOptionalArgs,
+	type TActionWithOptionalArgs,
+} from "@/actions";
 import {
 	getPlatformAlternateKey,
 	getPlatformSpecialKey,
@@ -51,12 +55,13 @@ export function useKeyboardShortcutsHelp() {
 		}
 
 		const result: KeyboardShortcut[] = [];
-		for (const [action, keys] of actionToKeys) {
+		for (const action of Object.keys(ACTIONS)) {
+			if (!isActionWithOptionalArgs(action)) continue;
 			const actionDef = ACTIONS[action];
-			if (!actionDef) continue;
+			if (actionDef.category === "assets") continue;
 			result.push({
 				id: action,
-				keys,
+				keys: actionToKeys.get(action) ?? [],
 				description: actionDef.description,
 				category: actionDef.category,
 				action,

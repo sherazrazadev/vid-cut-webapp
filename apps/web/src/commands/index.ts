@@ -1,4 +1,4 @@
-export { Command } from "./base-command";
+export { Command, commandLabelFromName } from "./base-command";
 export type { CommandResult } from "./base-command";
 export { BatchCommand } from "./batch-command";
 

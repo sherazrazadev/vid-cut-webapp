@@ -3,8 +3,8 @@ import type {
 	ParamValue,
 	ParamValues,
 } from "@/params";
-import { MIN_TRANSFORM_SCALE } from "@/animation/transform";
 import type { BlendMode } from "@/rendering";
+import { SCALE_MODE_OPTIONS } from "@/rendering/scale-mode";
 import type {
 	ElementType,
 	TimelineElement,
@@ -115,7 +115,8 @@ const visualElementParams: ElementParamDefinition[] = [
 		label: "Scale X",
 		type: "number",
 		default: DEFAULTS.element.transform.scaleX,
-		min: MIN_TRANSFORM_SCALE,
+		// Negative values flip the axis (see compositor flipX/flipY).
+		min: -100_000,
 		step: 0.01,
 	},
 	{
@@ -123,7 +124,7 @@ const visualElementParams: ElementParamDefinition[] = [
 		label: "Scale Y",
 		type: "number",
 		default: DEFAULTS.element.transform.scaleY,
-		min: MIN_TRANSFORM_SCALE,
+		min: -100_000,
 		step: 0.01,
 	},
 	{
@@ -134,6 +135,14 @@ const visualElementParams: ElementParamDefinition[] = [
 		min: -360,
 		max: 360,
 		step: 1,
+	},
+	{
+		key: "transform.scaleMode",
+		label: "Fit mode",
+		type: "select",
+		default: "fit",
+		keyframable: false,
+		options: SCALE_MODE_OPTIONS,
 	},
 	{
 		key: "opacity",
@@ -323,6 +332,74 @@ const textElementParams: ElementParamDefinition[] = [
 		min: -100_000,
 		step: 1,
 		dependencies: [{ param: "background.enabled", equals: true }],
+	},
+	{
+		key: "stroke.enabled",
+		label: "Stroke Enabled",
+		type: "boolean",
+		default: DEFAULTS.text.stroke.enabled,
+		keyframable: false,
+	},
+	{
+		key: "stroke.color",
+		label: "Stroke Color",
+		type: "color",
+		default: DEFAULTS.text.stroke.color,
+		dependencies: [{ param: "stroke.enabled", equals: true }],
+	},
+	{
+		key: "stroke.width",
+		label: "Stroke Width",
+		type: "number",
+		default: DEFAULTS.text.stroke.width,
+		min: 0,
+		max: 40,
+		step: 0.5,
+		dependencies: [{ param: "stroke.enabled", equals: true }],
+	},
+	{
+		key: "shadow.enabled",
+		label: "Shadow Enabled",
+		type: "boolean",
+		default: DEFAULTS.text.shadow.enabled,
+		keyframable: false,
+	},
+	{
+		key: "shadow.color",
+		label: "Shadow Color",
+		type: "color",
+		default: DEFAULTS.text.shadow.color,
+		dependencies: [{ param: "shadow.enabled", equals: true }],
+	},
+	{
+		key: "shadow.blur",
+		label: "Shadow Blur",
+		type: "number",
+		default: DEFAULTS.text.shadow.blur,
+		min: 0,
+		max: 64,
+		step: 1,
+		dependencies: [{ param: "shadow.enabled", equals: true }],
+	},
+	{
+		key: "shadow.offsetX",
+		label: "Shadow Offset X",
+		type: "number",
+		default: DEFAULTS.text.shadow.offsetX,
+		min: -200,
+		max: 200,
+		step: 1,
+		dependencies: [{ param: "shadow.enabled", equals: true }],
+	},
+	{
+		key: "shadow.offsetY",
+		label: "Shadow Offset Y",
+		type: "number",
+		default: DEFAULTS.text.shadow.offsetY,
+		min: -200,
+		max: 200,
+		step: 1,
+		dependencies: [{ param: "shadow.enabled", equals: true }],
 	},
 ];
 

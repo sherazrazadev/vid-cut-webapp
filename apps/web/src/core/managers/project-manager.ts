@@ -108,6 +108,7 @@ export class ProjectManager {
 		this.active = newProject;
 		this.notify();
 
+		this.editor.command.clear();
 		this.editor.media.clearAllAssets();
 		this.editor.scenes.initializeScenes({
 			scenes: newProject.scenes,
@@ -133,6 +134,7 @@ export class ProjectManager {
 
 		this.editor.save.pause();
 		await this.ensureStorageMigrations();
+		this.editor.command.clear();
 		this.editor.media.clearAllAssets();
 		this.editor.scenes.clearScenes();
 
@@ -311,6 +313,7 @@ export class ProjectManager {
 		this.active = null;
 		this.notify();
 
+		this.editor.command.clear();
 		this.editor.media.clearAllAssets();
 		this.editor.scenes.clearScenes();
 	}

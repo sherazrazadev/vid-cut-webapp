@@ -16,9 +16,10 @@ import {
 	buildTransformFromParams,
 	readBlendModeFromParams,
 	readOpacityFromParams,
+	readScaleModeFromParams,
 } from "@/rendering";
 
-const PREVIEW_MAX_IMAGE_SIZE = 2048;
+const DEFAULT_PREVIEW_MAX_IMAGE_SIZE = 2048;
 
 function getVisibleSortedElements({ track }: { track: TimelineTrack }) {
 	return track.elements
@@ -35,11 +36,13 @@ function buildTrackNodes({
 	mediaMap,
 	canvasSize,
 	isPreview,
+	previewMaxImageSize,
 }: {
 	tracks: TimelineTrack[];
 	mediaMap: Map<string, MediaAsset>;
 	canvasSize: TCanvasSize;
 	isPreview?: boolean;
+	previewMaxImageSize?: number;
 }): AnyBaseNode[] {
 	const nodes: AnyBaseNode[] = [];
 
@@ -77,6 +80,7 @@ function buildTrackNodes({
 							trimEnd: element.trimEnd,
 							retime: element.retime,
 							transform: buildTransformFromParams({ params: element.params }),
+							scaleMode: readScaleModeFromParams({ params: element.params }),
 							animations: element.animations,
 							opacity: readOpacityFromParams({ params: element.params }),
 							blendMode: readBlendModeFromParams({ params: element.params }),
@@ -94,13 +98,15 @@ function buildTrackNodes({
 							trimStart: element.trimStart,
 							trimEnd: element.trimEnd,
 							transform: buildTransformFromParams({ params: element.params }),
+							scaleMode: readScaleModeFromParams({ params: element.params }),
 							animations: element.animations,
 							opacity: readOpacityFromParams({ params: element.params }),
 							blendMode: readBlendModeFromParams({ params: element.params }),
 							effects: element.effects ?? [],
 							masks: element.masks ?? [],
 							...(isPreview && {
-								maxSourceSize: PREVIEW_MAX_IMAGE_SIZE,
+								maxSourceSize:
+									previewMaxImageSize ?? DEFAULT_PREVIEW_MAX_IMAGE_SIZE,
 							}),
 						}),
 					);
@@ -112,6 +118,7 @@ function buildTrackNodes({
 					new TextNode({
 						...element,
 						transform: buildTransformFromParams({ params: element.params }),
+						scaleMode: readScaleModeFromParams({ params: element.params }),
 						opacity: readOpacityFromParams({ params: element.params }),
 						blendMode: readBlendModeFromParams({ params: element.params }),
 						canvasCenter: { x: canvasSize.width / 2, y: canvasSize.height / 2 },
@@ -133,6 +140,7 @@ function buildTrackNodes({
 						trimStart: element.trimStart,
 						trimEnd: element.trimEnd,
 						transform: buildTransformFromParams({ params: element.params }),
+						scaleMode: readScaleModeFromParams({ params: element.params }),
 						animations: element.animations,
 						opacity: readOpacityFromParams({ params: element.params }),
 						blendMode: readBlendModeFromParams({ params: element.params }),
@@ -151,6 +159,7 @@ function buildTrackNodes({
 						trimStart: element.trimStart,
 						trimEnd: element.trimEnd,
 						transform: buildTransformFromParams({ params: element.params }),
+						scaleMode: readScaleModeFromParams({ params: element.params }),
 						animations: element.animations,
 						opacity: readOpacityFromParams({ params: element.params }),
 						blendMode: readBlendModeFromParams({ params: element.params }),
@@ -221,6 +230,7 @@ export type BuildSceneParams = {
 	duration: number;
 	background: TBackground;
 	isPreview?: boolean;
+	previewMaxImageSize?: number;
 };
 
 export function buildScene({
@@ -230,6 +240,7 @@ export function buildScene({
 	duration,
 	background,
 	isPreview,
+	previewMaxImageSize,
 }: BuildSceneParams) {
 	const rootNode = new RootNode({ duration });
 	const mediaMap = new Map(mediaAssets.map((m) => [m.id, m]));
@@ -246,6 +257,7 @@ export function buildScene({
 		mediaMap,
 		canvasSize,
 		isPreview,
+		previewMaxImageSize,
 	});
 
 	if (background.type === "blur") {

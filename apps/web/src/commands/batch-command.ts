@@ -2,7 +2,10 @@ import { Command, type CommandResult } from "./base-command";
 
 export class BatchCommand extends Command {
 	constructor(private commands: Command[]) {
-		super();
+		super({
+			label:
+				commands.length === 1 ? (commands[0]?.label ?? "Edit") : "Multiple edits",
+		});
 	}
 
 	execute(): CommandResult | undefined {

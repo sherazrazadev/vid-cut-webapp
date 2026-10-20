@@ -31,6 +31,8 @@ export type TrackType = "video" | "text" | "audio" | "graphic" | "effect";
 interface BaseTrack {
 	id: string;
 	name: string;
+	/** When true, clips on this track cannot be moved, trimmed, split, or deleted. */
+	locked?: boolean;
 }
 
 export interface VideoTrack extends BaseTrack {

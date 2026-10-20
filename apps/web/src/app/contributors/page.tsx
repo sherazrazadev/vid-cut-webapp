@@ -7,13 +7,13 @@ import { EXTERNAL_TOOLS } from "@/site/external-tools";
 import { BasePage } from "../base-page";
 
 export const metadata: Metadata = {
-	title: "Contributors - OpenCut",
+	title: "Contributors - vid-cut",
 	description:
-		"Meet the amazing people who contribute to OpenCut, the free and open-source video editor.",
+		"Meet the amazing people who contribute to vid-cut, the free and open-source video editor.",
 	openGraph: {
-		title: "Contributors - OpenCut",
+		title: "Contributors - vid-cut",
 		description:
-			"Meet the amazing people who contribute to OpenCut, the free and open-source video editor.",
+			"Meet the amazing people who contribute to vid-cut, the free and open-source video editor.",
 		type: "website",
 	},
 };
@@ -28,15 +28,21 @@ interface Contributor {
 }
 
 async function getContributors(): Promise<Contributor[]> {
+	// Own GitHub repo not wired yet — do not pull upstream OpenCut contributors.
+	const repo = process.env.NEXT_PUBLIC_GITHUB_REPO;
+	if (!repo) {
+		return [];
+	}
+
 	try {
 		const response = await fetch(
-			"https://api.github.com/repos/OpenCut-app/OpenCut/contributors?per_page=100",
+			`https://api.github.com/repos/${repo}/contributors?per_page=100`,
 			{
 				headers: {
 					Accept: "application/vnd.github.v3+json",
-					"User-Agent": "OpenCut-Web-App",
+					"User-Agent": "vid-cut-Web-App",
 				},
-				next: { revalidate: 600 }, // 10 minutes
+				next: { revalidate: 600 },
 			},
 		);
 
@@ -46,12 +52,7 @@ async function getContributors(): Promise<Contributor[]> {
 		}
 
 		const contributors = (await response.json()) as Contributor[];
-
-		const filteredContributors = contributors.filter(
-			(contributor) => contributor.type === "User",
-		);
-
-		return filteredContributors;
+		return contributors.filter((contributor) => contributor.type === "User");
 	} catch (error) {
 		console.error("Error fetching contributors:", error);
 		return [];
@@ -70,7 +71,7 @@ export default async function ContributorsPage() {
 	return (
 		<BasePage
 			title="Contributors"
-			description="Meet the amazing people who contribute to OpenCut, the free and open-source video editor."
+			description="Meet the amazing people who contribute to vid-cut, the free and open-source video editor."
 		>
 			<div className="-mt-4 flex items-center justify-center gap-8 text-sm">
 				<StatItem value={contributors.length} label="contributors" />
@@ -87,7 +88,7 @@ export default async function ContributorsPage() {
 				<ExternalToolsSection />
 				<GitHubContributeSection
 					title="Join the community"
-					description="OpenCut is built by developers like you. Every contribution, no matter how small, helps make video editing more accessible for everyone."
+					description="vid-cut is built by developers like you. Every contribution, no matter how small, helps make video editing more accessible for everyone."
 				/>
 			</div>
 		</BasePage>
@@ -169,7 +170,7 @@ function AllContributorsSection({
 			<div className="flex flex-col gap-2 text-center">
 				<h2 className="text-2xl font-semibold">All contributors</h2>
 				<p className="text-muted-foreground">
-					Everyone who makes OpenCut better
+					Everyone who makes vid-cut better
 				</p>
 			</div>
 
@@ -211,7 +212,7 @@ function ExternalToolsSection() {
 		<div className="flex flex-col gap-10">
 			<div className="flex flex-col gap-2 text-center">
 				<h2 className="text-2xl font-semibold">External tools</h2>
-				<p className="text-muted-foreground">Tools we use to build OpenCut</p>
+				<p className="text-muted-foreground">Tools we use to build vid-cut</p>
 			</div>
 
 			<div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2">

@@ -19,6 +19,7 @@ import {
 } from "@/text/measure-element";
 import { resolveColorAtTime, resolveOpacityAtTime } from "@/animation/values";
 import { resolveTransformAtTime } from "@/rendering/animation-values";
+import { getBaseScaleFactors } from "@/rendering/scale-mode";
 import { videoCache } from "@/services/video-cache/service";
 import type { CanvasRenderer } from "./canvas-renderer";
 import type { AnyBaseNode } from "./nodes/base-node";
@@ -159,20 +160,24 @@ function resolveVisualState({
 		animations: params.animations,
 		localTime,
 	});
-	const containScale = Math.min(
-		context.renderer.width / sourceWidth,
-		context.renderer.height / sourceHeight,
-	);
+	const baseScale = getBaseScaleFactors({
+		mode: params.scaleMode ?? "fit",
+		canvasWidth: context.renderer.width,
+		canvasHeight: context.renderer.height,
+		sourceWidth,
+		sourceHeight,
+	});
 	const effectWidth = Math.round(
-		Math.abs(sourceWidth * containScale * transform.scaleX),
+		Math.abs(sourceWidth * baseScale.scaleX * transform.scaleX),
 	);
 	const effectHeight = Math.round(
-		Math.abs(sourceHeight * containScale * transform.scaleY),
+		Math.abs(sourceHeight * baseScale.scaleY * transform.scaleY),
 	);
 
 	return {
 		localTime,
 		transform,
+		scaleMode: params.scaleMode ?? "fit",
 		opacity,
 		effectPasses: resolveEffectPassGroups({
 			effects: params.effects,

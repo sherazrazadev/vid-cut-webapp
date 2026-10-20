@@ -1,0 +1,29 @@
+vid-cut
+=======
+
+This product is a derivative fork of OpenCut classic.
+
+Upstream
+--------
+- Project: OpenCut (classic / legacy)
+- Repository: https://github.com/OpenCut-app/opencut-classic
+- Upstream commit at fork: cf5e79e919144200294fb9fed22a222592a0aeea
+- License: MIT (see LICENSE)
+
+Copyright notice from upstream LICENSE
+--------------------------------------
+Copyright 2025-2026 OpenCut
+
+The MIT license terms in LICENSE apply to the Software. The copyright notice
+and permission notice from upstream are retained as required by the MIT license.
+
+npm dependency (unchanged package name)
+---------------------------------------
+- `opencut-wasm` is an upstream-published package used for media timing /
+  compositor bindings. Its package name on npm remains `opencut-wasm`.
+
+Trademark note
+--------------
+"OpenCut" and related marks belong to their respective owners. This fork is
+independently branded as "vid-cut" and is not affiliated with or endorsed by
+OpenCut.

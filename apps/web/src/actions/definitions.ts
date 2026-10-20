@@ -86,6 +86,10 @@ export const ACTIONS = {
 		description: "Copy selected elements",
 		category: "editing",
 	},
+	"cut-selected": {
+		description: "Cut selected elements",
+		category: "editing",
+	},
 	"paste-copied": {
 		description: "Paste elements at playhead",
 		category: "editing",
@@ -126,6 +130,14 @@ export const ACTIONS = {
 		description: "Show/hide selected elements",
 		category: "selection",
 	},
+	"flip-horizontal-selected": {
+		description: "Flip selected elements horizontally",
+		category: "editing",
+	},
+	"flip-vertical-selected": {
+		description: "Flip selected elements vertically",
+		category: "editing",
+	},
 	"toggle-bookmark": {
 		description: "Toggle bookmark at playhead",
 		category: "timeline",
@@ -136,6 +148,14 @@ export const ACTIONS = {
 	},
 	redo: {
 		description: "Redo",
+		category: "history",
+	},
+	"open-shortcuts": {
+		description: "Keyboard shortcuts",
+		category: "controls",
+	},
+	"toggle-history": {
+		description: "Action history",
 		category: "history",
 	},
 	"remove-media-asset": {
@@ -167,6 +187,7 @@ const ACTION_DEFAULT_SHORTCUTS = [
 	["split-right", ["w"]],
 	["delete-selected", ["backspace", "delete"]],
 	["copy-selected", ["ctrl+c"]],
+	["cut-selected", ["ctrl+x"]],
 	["paste-copied", ["ctrl+v"]],
 	["toggle-snapping", ["n"]],
 	["select-all", ["ctrl+a"]],
@@ -174,6 +195,8 @@ const ACTION_DEFAULT_SHORTCUTS = [
 	["duplicate-selected", ["ctrl+d"]],
 	["undo", ["ctrl+z"]],
 	["redo", ["ctrl+shift+z", "ctrl+y"]],
+	["open-shortcuts", ["ctrl+/", "?", "shift+/"]],
+	["toggle-history", ["ctrl+shift+h"]],
 ] as const satisfies ReadonlyArray<
 	readonly [TActionWithOptionalArgs, readonly ShortcutKey[]]
 >;

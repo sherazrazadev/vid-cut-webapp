@@ -4,6 +4,10 @@ import type { EffectPass } from "@/effects/types";
 import type { BlendMode, Transform } from "@/rendering";
 import { drawMeasuredTextLayout } from "@/text/primitives";
 import type { MeasuredTextElement } from "@/text/measure-element";
+import {
+	buildTextShadowFromParams,
+	buildTextStrokeFromParams,
+} from "@/text/style";
 
 export type TextNodeParams = TextElement & {
 	transform: Transform;
@@ -55,6 +59,8 @@ export function renderTextToContext({
 		background: resolved.measuredText.resolvedBackground,
 		backgroundColor: resolved.backgroundColor,
 		textBaseline: baseline,
+		stroke: buildTextStrokeFromParams({ params: node.params.params }),
+		shadow: buildTextShadowFromParams({ params: node.params.params }),
 	});
 
 	ctx.restore();

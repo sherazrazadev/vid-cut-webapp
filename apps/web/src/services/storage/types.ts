@@ -25,6 +25,8 @@ export interface MediaAssetData {
 	duration?: number;
 	fps?: number;
 	hasAudio?: boolean;
+	/** Container/video codec label from probe (e.g. avc, hevc). */
+	codec?: string;
 	ephemeral?: boolean;
 	thumbnailUrl?: string;
 }

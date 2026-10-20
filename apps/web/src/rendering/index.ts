@@ -1,4 +1,12 @@
 import type { ParamValues } from "@/params";
+import { isScaleMode, type ScaleMode } from "@/rendering/scale-mode";
+
+export type { ScaleMode } from "@/rendering/scale-mode";
+export {
+	SCALE_MODE_OPTIONS,
+	getBaseScaleFactors,
+	isScaleMode,
+} from "@/rendering/scale-mode";
 
 export interface Transform {
 	scaleX: number;
@@ -51,6 +59,15 @@ export function readOpacityFromParams({
 	params: ParamValues;
 }): number {
 	return readNumberParam({ params, key: "opacity", fallback: 1 });
+}
+
+export function readScaleModeFromParams({
+	params,
+}: {
+	params: ParamValues;
+}): ScaleMode {
+	const value = params["transform.scaleMode"];
+	return isScaleMode(value) ? value : "fit";
 }
 
 export function readBlendModeFromParams({

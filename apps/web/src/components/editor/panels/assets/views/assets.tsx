@@ -31,6 +31,7 @@ import { useEditor } from "@/editor/use-editor";
 import { useFileUpload } from "@/media/use-file-upload";
 import { invokeAction } from "@/actions";
 import { processMediaAssets } from "@/media/processing";
+import { MEDIA_FILE_ACCEPT } from "@/media/media-utils";
 import { showMediaUploadToast } from "@/media/upload-toast";
 import {
 	SelectableItem,
@@ -117,7 +118,7 @@ export function MediaView() {
 
 	const { isDragOver, dragProps, openFilePicker, fileInputProps } =
 		useFileUpload({
-			accept: "image/*,video/*,audio/*",
+			accept: MEDIA_FILE_ACCEPT,
 			multiple: true,
 			onFilesSelected: (files) => processFiles({ files }),
 		});

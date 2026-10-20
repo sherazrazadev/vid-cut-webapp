@@ -28,6 +28,20 @@ const defaultTextBackground = {
 	offsetY: 0,
 };
 
+const defaultTextStroke = {
+	enabled: false,
+	color: "#000000",
+	width: 4,
+};
+
+const defaultTextShadow = {
+	enabled: false,
+	color: "rgba(0,0,0,0.55)",
+	blur: 8,
+	offsetX: 0,
+	offsetY: 4,
+};
+
 const defaultTextElement: Omit<TextElement, "id"> = {
 	type: "text",
 	name: "Text",
@@ -53,11 +67,20 @@ const defaultTextElement: Omit<TextElement, "id"> = {
 		"background.paddingY": defaultTextBackground.paddingY,
 		"background.offsetX": defaultTextBackground.offsetX,
 		"background.offsetY": defaultTextBackground.offsetY,
+		"stroke.enabled": defaultTextStroke.enabled,
+		"stroke.color": defaultTextStroke.color,
+		"stroke.width": defaultTextStroke.width,
+		"shadow.enabled": defaultTextShadow.enabled,
+		"shadow.color": defaultTextShadow.color,
+		"shadow.blur": defaultTextShadow.blur,
+		"shadow.offsetX": defaultTextShadow.offsetX,
+		"shadow.offsetY": defaultTextShadow.offsetY,
 		"transform.positionX": defaultTransform.position.x,
 		"transform.positionY": defaultTransform.position.y,
 		"transform.scaleX": defaultTransform.scaleX,
 		"transform.scaleY": defaultTransform.scaleY,
 		"transform.rotate": defaultTransform.rotate,
+		"transform.scaleMode": "fit",
 		opacity: defaultOpacity,
 		blendMode: defaultBlendMode,
 	},
@@ -80,6 +103,8 @@ export const DEFAULTS = {
 		letterSpacing: defaultTextLetterSpacing,
 		lineHeight: defaultTextLineHeight,
 		background: defaultTextBackground,
+		stroke: defaultTextStroke,
+		shadow: defaultTextShadow,
 		element: defaultTextElement,
 	},
 	timeline: {

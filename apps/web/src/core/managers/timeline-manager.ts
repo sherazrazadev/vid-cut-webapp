@@ -15,7 +15,9 @@ import { lastFrameMediaTime, type MediaTime, ZERO_MEDIA_TIME } from "@/wasm";
 import {
 	canElementBeHidden,
 	canElementHaveAudio,
+	isVisualElement,
 } from "@/timeline/element-utils";
+import { applyFadeVolumeAnimations } from "@/timeline/audio-fade";
 import { isElementMuted } from "@/timeline/audio-state";
 import type {
 	AnimationPath,
@@ -29,11 +31,14 @@ import {
 } from "@/animation";
 import { resolveAnimationTarget } from "@/timeline/animation-targets";
 import { BatchCommand } from "@/commands";
+import { toast } from "sonner";
+import { isTrackLocked } from "@/timeline/track-capabilities";
 import {
 	AddTrackCommand,
 	RemoveTrackCommand,
 	ToggleTrackMuteCommand,
 	ToggleTrackVisibilityCommand,
+	ToggleTrackLockCommand,
 	InsertElementCommand,
 	DeleteElementsCommand,
 	DuplicateElementsCommand,
@@ -156,6 +161,24 @@ export class TimelineManager {
 		});
 	}
 
+	private areTrackIdsEditable({
+		trackIds,
+	}: {
+		trackIds: Iterable<string>;
+	}): boolean {
+		const uniqueIds = [...new Set(trackIds)];
+		for (const trackId of uniqueIds) {
+			const track = this.getTrackById({ trackId });
+			if (isTrackLocked(track)) {
+				toast.error("Track is locked", {
+					description: "Unlock the track to edit clips on it.",
+				});
+				return false;
+			}
+		}
+		return true;
+	}
+
 	moveElements({
 		moves,
 		createTracks,
@@ -164,6 +187,17 @@ export class TimelineManager {
 		createTracks?: PlannedTrackCreation[];
 	}): void {
 		if (moves.length === 0) {
+			return;
+		}
+
+		const trackIds = moves.flatMap((move) => {
+			const ids = [move.sourceTrackId];
+			if (move.targetTrackId) {
+				ids.push(move.targetTrackId);
+			}
+			return ids;
+		});
+		if (!this.areTrackIdsEditable({ trackIds })) {
 			return;
 		}
 
@@ -184,6 +218,11 @@ export class TimelineManager {
 		this.editor.command.execute({ command });
 	}
 
+	toggleTrackLock({ trackId }: { trackId: string }): void {
+		const command = new ToggleTrackLockCommand(trackId);
+		this.editor.command.execute({ command });
+	}
+
 	splitElements({
 		elements,
 		splitTime,
@@ -193,6 +232,14 @@ export class TimelineManager {
 		splitTime: MediaTime;
 		retainSide?: "both" | "left" | "right";
 	}): { trackId: string; elementId: string }[] {
+		if (
+			!this.areTrackIdsEditable({
+				trackIds: elements.map((element) => element.trackId),
+			})
+		) {
+			return [];
+		}
+
 		const command = new SplitElementsCommand({
 			elements,
 			splitTime,
@@ -254,6 +301,14 @@ export class TimelineManager {
 	}: {
 		elements: { trackId: string; elementId: string }[];
 	}): void {
+		if (
+			!this.areTrackIdsEditable({
+				trackIds: elements.map((element) => element.trackId),
+			})
+		) {
+			return;
+		}
+
 		const command = new DeleteElementsCommand({ elements });
 		this.editor.command.execute({ command });
 	}
@@ -284,6 +339,14 @@ export class TimelineManager {
 		pushHistory?: boolean;
 	}): void {
 		if (updates.length === 0) {
+			return;
+		}
+
+		if (
+			!this.areTrackIdsEditable({
+				trackIds: updates.map((update) => update.trackId),
+			})
+		) {
 			return;
 		}
 
@@ -801,6 +864,14 @@ export class TimelineManager {
 	}: {
 		elements: { trackId: string; elementId: string }[];
 	}): { trackId: string; elementId: string }[] {
+		if (
+			!this.areTrackIdsEditable({
+				trackIds: elements.map((element) => element.trackId),
+			})
+		) {
+			return [];
+		}
+
 		const command = new DuplicateElementsCommand({ elements });
 		this.editor.command.execute({ command });
 		return command.getDuplicatedElements();
@@ -855,6 +926,76 @@ export class TimelineManager {
 					trackId,
 					elementId,
 					patch: { params: { muted: shouldMute } },
+				},
+			];
+		});
+
+		this.updateElements({ updates: nextUpdates });
+	}
+
+	applyAudioFades({
+		trackId,
+		elementId,
+		fadeInSeconds,
+		fadeOutSeconds,
+	}: {
+		trackId: string;
+		elementId: string;
+		fadeInSeconds: number;
+		fadeOutSeconds: number;
+	}): void {
+		const element = this.getElementByRef({ trackId, elementId });
+		if (!element || (element.type !== "audio" && element.type !== "video")) {
+			return;
+		}
+
+		const animations = applyFadeVolumeAnimations({
+			element,
+			fadeInSeconds,
+			fadeOutSeconds,
+		});
+
+		this.updateElements({
+			updates: [
+				{
+					trackId,
+					elementId,
+					patch: { animations },
+				},
+			],
+		});
+	}
+
+	flipElements({
+		elements,
+		axis,
+	}: {
+		elements: { trackId: string; elementId: string }[];
+		axis: "horizontal" | "vertical";
+	}): void {
+		const paramKey =
+			axis === "horizontal" ? "transform.scaleX" : "transform.scaleY";
+
+		const nextUpdates = elements.flatMap(({ trackId, elementId }) => {
+			const element = this.getElementByRef({ trackId, elementId });
+			if (!element || !isVisualElement(element)) {
+				return [];
+			}
+
+			const current =
+				typeof element.params[paramKey] === "number"
+					? element.params[paramKey]
+					: 1;
+
+			return [
+				{
+					trackId,
+					elementId,
+					patch: {
+						params: {
+							[paramKey]: -current,
+						},
+					},
 				},
 			];
 		});

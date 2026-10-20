@@ -18,3 +18,7 @@ export function canTrackBeHidden(
 ): track is VideoTrack | TextTrack | GraphicTrack | EffectTrack {
 	return track.type !== "audio";
 }
+
+export function isTrackLocked(track: TimelineTrack | null | undefined): boolean {
+	return Boolean(track?.locked);
+}

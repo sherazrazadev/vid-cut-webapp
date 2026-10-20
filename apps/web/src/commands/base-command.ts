@@ -18,7 +18,22 @@ export function createElementSelectionResult(
 	};
 }
 
+export function commandLabelFromName({ name }: { name: string }): string {
+	const withoutSuffix = name.replace(/Command$/, "");
+	const spaced = withoutSuffix
+		.replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+		.replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+		.trim();
+	return spaced.length > 0 ? spaced : "Edit";
+}
+
 export abstract class Command {
+	readonly label: string;
+
+	constructor({ label }: { label?: string } = {}) {
+		this.label = label ?? commandLabelFromName({ name: this.constructor.name });
+	}
+
 	abstract execute(): CommandResult | undefined;
 
 	undo(): void {

@@ -48,7 +48,7 @@ const ASSET_SECTIONS: AssetSection[] = [
 	{
 		title: "Symbol",
 		description:
-			"Use the symbol on its own when the OpenCut name is already present nearby or space is limited.",
+			"Use the symbol on its own when the vid-cut name is already present nearby or space is limited.",
 		cols: "2",
 		assets: [
 			{
@@ -112,7 +112,7 @@ export default function BrandPage() {
 			title="Brand"
 			description={
 				<>
-					Download OpenCut brand assets for use in your projects.{" "}
+					Download vid-cut brand assets for use in your projects.{" "}
 					<Link
 						href="#guidelines"
 						className="underline underline-offset-4"
@@ -173,17 +173,17 @@ export default function BrandPage() {
 				<div className="flex flex-col gap-3">
 					<h2 className="font-semibold text-lg">Usage</h2>
 					<p className="text-muted-foreground text-base leading-relaxed">
-						OpenCut is open source — the code is free to use under its license.
+						vid-cut is open source — the code is free to use under its license.
 						That license does not cover the name or logo. You can say you use
-						OpenCut, that your project integrates with OpenCut, or that it was
-						built on top of OpenCut. You cannot name your product OpenCut, imply
+						vid-cut, that your project integrates with vid-cut, or that it was
+						built on top of vid-cut. You cannot name your product vid-cut, imply
 						we made or endorse your product, or use the marks commercially
 						without asking first. For anything unclear, reach out at{" "}
 						<Link
-							href="mailto:brand@opencut.app"
+							href="mailto:brand@localhost:3000"
 							className="underline underline-offset-4"
 						>
-							brand@opencut.app
+							brand@localhost:3000
 						</Link>
 						.
 					</p>
@@ -193,8 +193,8 @@ export default function BrandPage() {
 					<h2 className="font-semibold text-lg">What&apos;s not allowed</h2>
 					<ul className="text-muted-foreground text-base flex flex-col gap-2 leading-relaxed">
 						{[
-							"Using OpenCut in the name of your product, service, or domain.",
-							"Implying that OpenCut made, sponsors, or endorses your work.",
+							"Using vid-cut in the name of your product, service, or domain.",
+							"Implying that vid-cut made, sponsors, or endorses your work.",
 							"Using the logo or name on merchandise or commercial marketing.",
 							"Modifying the marks.",
 						].map((item) => (

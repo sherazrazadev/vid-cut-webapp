@@ -17,16 +17,21 @@ import { mediaTimeToSeconds } from "opencut-wasm";
 import { TICKS_PER_SECOND } from "@/wasm";
 import { frameRateToFloat } from "@/fps/utils";
 import type { RootNode } from "./nodes/root-node";
-import type { ExportFormat, ExportQuality } from "@/export";
+import type { ExportFormat, ExportQuality, ExportVideoCodec } from "@/export";
+import { getDefaultVideoCodec } from "@/export";
 import { CanvasRenderer } from "./canvas-renderer";
 
 type ExportParams = {
 	width: number;
 	height: number;
+	outputWidth?: number;
+	outputHeight?: number;
 	fps: FrameRate;
 	format: ExportFormat;
 	quality: ExportQuality;
+	videoCodec?: ExportVideoCodec;
 	shouldIncludeAudio?: boolean;
+	audioOnly?: boolean;
 	audioBuffer?: AudioBuffer;
 };
 
@@ -48,7 +53,11 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
 	private renderer: CanvasRenderer;
 	private format: ExportFormat;
 	private quality: ExportQuality;
+	private videoCodec: ExportVideoCodec;
+	private outputWidth: number;
+	private outputHeight: number;
 	private shouldIncludeAudio: boolean;
+	private audioOnly: boolean;
 	private audioBuffer?: AudioBuffer;
 
 	private isCancelled = false;
@@ -56,10 +65,14 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
 	constructor({
 		width,
 		height,
+		outputWidth,
+		outputHeight,
 		fps,
 		format,
 		quality,
+		videoCodec,
 		shouldIncludeAudio,
+		audioOnly,
 		audioBuffer,
 	}: ExportParams) {
 		super();
@@ -71,8 +84,19 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
 
 		this.format = format;
 		this.quality = quality;
+		this.videoCodec = videoCodec ?? getDefaultVideoCodec({ format });
+		this.outputWidth = outputWidth ?? width;
+		this.outputHeight = outputHeight ?? height;
 		this.shouldIncludeAudio = shouldIncludeAudio ?? false;
+		this.audioOnly = audioOnly ?? false;
 		this.audioBuffer = audioBuffer;
+	}
+
+	private createEncodeCanvas(): HTMLCanvasElement {
+		const canvas = document.createElement("canvas");
+		canvas.width = this.outputWidth;
+		canvas.height = this.outputHeight;
+		return canvas;
 	}
 
 	cancel(): void {
@@ -99,12 +123,25 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
 			target: new BufferTarget(),
 		});
 
-		const videoSource = new CanvasSource(this.renderer.getOutputCanvas(), {
-			codec: this.format === "webm" ? "vp9" : "avc",
-			bitrate: qualityMap[this.quality],
-		});
+		const needsScale =
+			!this.audioOnly &&
+			(this.outputWidth !== this.renderer.width ||
+				this.outputHeight !== this.renderer.height);
+		const encodeCanvas = needsScale
+			? this.createEncodeCanvas()
+			: this.renderer.getOutputCanvas();
+		const encodeCtx = needsScale
+			? (encodeCanvas as HTMLCanvasElement).getContext("2d")
+			: null;
 
-		output.addVideoTrack(videoSource, { frameRate: fpsFloat });
+		let videoSource: CanvasSource | null = null;
+		if (!this.audioOnly) {
+			videoSource = new CanvasSource(encodeCanvas, {
+				codec: this.videoCodec,
+				bitrate: qualityMap[this.quality],
+			});
+			output.addVideoTrack(videoSource, { frameRate: fpsFloat });
+		}
 
 		let audioSource: AudioBufferSource | null = null;
 		if (this.shouldIncludeAudio && this.audioBuffer) {
@@ -134,6 +171,23 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
 			audioSource.close();
 		}
 
+		if (this.audioOnly) {
+			if (this.isCancelled) {
+				await output.cancel();
+				this.emit("cancelled");
+				return null;
+			}
+			this.emit("progress", 1);
+			await output.finalize();
+			const audioBuffer = output.target.buffer;
+			if (!audioBuffer) {
+				this.emit("error", new Error("Failed to export audio"));
+				return null;
+			}
+			this.emit("complete", audioBuffer);
+			return audioBuffer;
+		}
+
 		for (let i = 0; i < frameCount; i++) {
 			if (this.isCancelled) {
 				await output.cancel();
@@ -144,7 +198,16 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
 			const timeTicks = i * ticksPerFrame;
 			const timeSeconds = mediaTimeToSeconds({ time: timeTicks });
 			await this.renderer.render({ node: rootNode, time: timeTicks });
-			await videoSource.add(timeSeconds, 1 / fpsFloat);
+			if (encodeCtx && needsScale) {
+				encodeCtx.drawImage(
+					this.renderer.getOutputCanvas(),
+					0,
+					0,
+					this.outputWidth,
+					this.outputHeight,
+				);
+			}
+			await videoSource?.add(timeSeconds, 1 / fpsFloat);
 
 			this.emit("progress", i / frameCount);
 		}
@@ -155,7 +218,7 @@ export class SceneExporter extends EventEmitter<SceneExporterEvents> {
 			return null;
 		}
 
-		videoSource.close();
+		videoSource?.close();
 		await output.finalize();
 		this.emit("progress", 1);
 

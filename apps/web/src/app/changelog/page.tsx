@@ -14,25 +14,25 @@ import {
 } from "@/changelog/components/release";
 
 export const metadata: Metadata = {
-	title: "Changelog - OpenCut",
-	description: "What's new in OpenCut",
+	title: "Changelog - vid-cut",
+	description: "What's new in vid-cut",
 	openGraph: {
-		title: "Changelog - OpenCut",
-		description: "Every update, improvement, and fix to OpenCut — documented.",
+		title: "Changelog - vid-cut",
+		description: "Every update, improvement, and fix to vid-cut — documented.",
 		type: "website",
 		images: [
 			{
 				url: "/open-graph/changlog.jpg",
 				width: 1200,
 				height: 630,
-				alt: "OpenCut Changelog",
+				alt: "vid-cut Changelog",
 			},
 		],
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "Changelog - OpenCut",
-		description: "What's new in OpenCut",
+		title: "Changelog - vid-cut",
+		description: "What's new in vid-cut",
 		images: ["/open-graph/changlog.jpg"],
 	},
 };
@@ -41,7 +41,7 @@ export default function ChangelogPage() {
 	const releases = getSortedReleases();
 
 	return (
-		<BasePage title="Changelog" description="See what's new in OpenCut">
+		<BasePage title="Changelog" description="See what's new in vid-cut">
 			<div className="mx-auto w-full max-w-3xl">
 				<div className="relative">
 					<div

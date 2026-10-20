@@ -47,7 +47,33 @@ describe("keybinding persistence", () => {
 		expect(decoded.keybindings.get("s")).toBe("split");
 		expect(decoded.keybindings.get("ctrl+v")).toBe("paste-copied");
 		expect(decoded.keybindings.get("escape")).toBe("cancel-interaction");
+		expect(decoded.keybindings.get("ctrl+x")).toBe("cut-selected");
+		expect(decoded.keybindings.get("ctrl+/")).toBe("open-shortcuts");
+		expect(decoded.keybindings.get("ctrl+shift+h")).toBe("toggle-history");
 		expect(warnSpy).not.toHaveBeenCalled();
+	});
+
+	test("v7 to v8 adds cut and history shortcuts without overwriting", () => {
+		const migrated = migratePersistedKeybindingsState({
+			state: {
+				keybindings: {
+					space: "toggle-play",
+					"ctrl+x": "toggle-play",
+				},
+				isCustomized: true,
+			},
+			fromVersion: 7,
+		});
+
+		const decoded = decodePersistedKeybindingsState({ state: migrated });
+		expect(decoded).not.toBeNull();
+		if (!decoded) throw new Error("Expected v8 keybindings");
+
+		expect(decoded.keybindings.get("ctrl+x")).toBe("toggle-play");
+		expect(decoded.keybindings.get("ctrl+/")).toBe("open-shortcuts");
+		expect(decoded.keybindings.get("?")).toBe("open-shortcuts");
+		expect(decoded.keybindings.get("shift+/")).toBe("open-shortcuts");
+		expect(decoded.keybindings.get("ctrl+shift+h")).toBe("toggle-history");
 	});
 
 	test("filters invalid persisted entries at the boundary and warns", () => {
@@ -75,6 +101,24 @@ describe("keybinding persistence", () => {
 		const decoded = decodePersistedKeybindingsState({ state: "garbage" });
 		expect(decoded).toBeNull();
 		expect(warnSpy).toHaveBeenCalledTimes(1);
+	});
+
+	test("round-trips cut and history actions", () => {
+		const serialized = serializeKeybindingsState({
+			keybindings: new Map([
+				["ctrl+x", "cut-selected"],
+				["ctrl+/", "open-shortcuts"],
+				["ctrl+shift+h", "toggle-history"],
+			]),
+			isCustomized: true,
+		});
+
+		const decoded = decodePersistedKeybindingsState({ state: serialized });
+		expect(decoded).not.toBeNull();
+		if (!decoded) throw new Error("Expected round-tripped cut/history");
+		expect(decoded.keybindings.get("ctrl+x")).toBe("cut-selected");
+		expect(decoded.keybindings.get("ctrl+/")).toBe("open-shortcuts");
+		expect(decoded.keybindings.get("ctrl+shift+h")).toBe("toggle-history");
 	});
 
 	test("round-trips actions that have no default shortcut", () => {

@@ -5,6 +5,8 @@ import {
 	Delete02Icon,
 	MagicWand05Icon,
 	MusicNote03Icon,
+	SquareLock02Icon,
+	SquareUnlock01Icon,
 	TaskAdd02Icon,
 	TextIcon,
 	ViewIcon,
@@ -50,6 +52,7 @@ import { useElementInteraction } from "@/timeline/hooks/element/use-element-inte
 import {
 	canTrackHaveAudio,
 	canTrackBeHidden,
+	isTrackLocked,
 	getTimelineZoomMin,
 	getTimelinePaddingPx,
 } from "@/timeline";
@@ -698,6 +701,18 @@ function TrackLabelsPanel({
 													}
 												/>
 											)}
+											<TrackToggleIcon
+												isOff={isTrackLocked(track)}
+												icons={{
+													on: SquareUnlock01Icon,
+													off: SquareLock02Icon,
+												}}
+												onClick={() =>
+													editor.timeline.toggleTrackLock({
+														trackId: track.id,
+													})
+												}
+											/>
 											<TrackIcon track={track} />
 										</div>
 										{expandedRows.length > 0 && (
@@ -866,6 +881,23 @@ function TimelineTrackRows({
 							{canTrackBeHidden(track) && track.hidden
 								? "Show track"
 								: "Hide track"}
+						</ContextMenuItem>
+						<ContextMenuItem
+							icon={
+								<HugeiconsIcon
+									icon={
+										isTrackLocked(track)
+											? SquareUnlock01Icon
+											: SquareLock02Icon
+									}
+								/>
+							}
+							onClick={(event: React.MouseEvent) => {
+								event.stopPropagation();
+								timeline.toggleTrackLock({ trackId: track.id });
+							}}
+						>
+							{isTrackLocked(track) ? "Unlock track" : "Lock track"}
 						</ContextMenuItem>
 						{track.id !== mainTrackId && (
 							<ContextMenuItem

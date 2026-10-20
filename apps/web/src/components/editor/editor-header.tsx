@@ -24,6 +24,8 @@ import { useEditor } from "@/editor/use-editor";
 import { CommandIcon, Logout05Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ShortcutsDialog } from "@/actions/components/shortcuts-dialog";
+import { HistoryControls } from "@/components/editor/history-controls";
+import { useEditorChromeStore } from "@/editor/chrome-store";
 import Image from "next/image";
 import { cn } from "@/utils/ui";
 
@@ -33,6 +35,7 @@ export function EditorHeader() {
 			<div className="flex items-center gap-1">
 				<ProjectDropdown />
 				<EditableProjectName />
+				<HistoryControls />
 			</div>
 			<nav className="flex items-center gap-2">
 				<FeedbackPopover />
@@ -44,9 +47,11 @@ export function EditorHeader() {
 }
 
 function ProjectDropdown() {
-	const [openDialog, setOpenDialog] = useState<
-		"delete" | "rename" | "shortcuts" | null
-	>(null);
+	const shortcutsOpen = useEditorChromeStore((s) => s.shortcutsOpen);
+	const setShortcutsOpen = useEditorChromeStore((s) => s.setShortcutsOpen);
+	const [openDialog, setOpenDialog] = useState<"delete" | "rename" | null>(
+		null,
+	);
 	const [isExiting, setIsExiting] = useState(false);
 	const router = useRouter();
 	const editor = useEditor();
@@ -131,7 +136,7 @@ function ProjectDropdown() {
 					</DropdownMenuItem>
 
 					<DropdownMenuItem
-						onClick={() => setOpenDialog("shortcuts")}
+						onClick={() => setShortcutsOpen({ open: true })}
 						icon={<HugeiconsIcon icon={CommandIcon} />}
 					>
 						Shortcuts
@@ -163,8 +168,8 @@ function ProjectDropdown() {
 				projectNames={[activeProject?.metadata.name || ""]}
 			/>
 			<ShortcutsDialog
-				isOpen={openDialog === "shortcuts"}
-				onOpenChange={(isOpen) => setOpenDialog(isOpen ? "shortcuts" : null)}
+				isOpen={shortcutsOpen}
+				onOpenChange={(isOpen) => setShortcutsOpen({ open: isOpen })}
 			/>
 		</>
 	);

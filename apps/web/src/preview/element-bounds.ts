@@ -7,7 +7,12 @@ import {
 	getElementLocalTime,
 } from "@/animation";
 import { resolveTransformAtTime } from "@/rendering/animation-values";
-import { buildTransformFromParams } from "@/rendering";
+import {
+	buildTransformFromParams,
+	getBaseScaleFactors,
+	readScaleModeFromParams,
+	type ScaleMode,
+} from "@/rendering";
 
 export interface ElementBounds {
 	cx: number;
@@ -30,6 +35,7 @@ function getVisualElementBounds({
 	sourceWidth,
 	sourceHeight,
 	transform,
+	scaleMode,
 }: {
 	canvasWidth: number;
 	canvasHeight: number;
@@ -41,13 +47,17 @@ function getVisualElementBounds({
 		position: { x: number; y: number };
 		rotate: number;
 	};
+	scaleMode: ScaleMode;
 }): ElementBounds {
-	const containScale = Math.min(
-		canvasWidth / sourceWidth,
-		canvasHeight / sourceHeight,
-	);
-	const scaledWidth = sourceWidth * containScale * transform.scaleX;
-	const scaledHeight = sourceHeight * containScale * transform.scaleY;
+	const baseScale = getBaseScaleFactors({
+		mode: scaleMode,
+		canvasWidth,
+		canvasHeight,
+		sourceWidth,
+		sourceHeight,
+	});
+	const scaledWidth = sourceWidth * baseScale.scaleX * transform.scaleX;
+	const scaledHeight = sourceHeight * baseScale.scaleY * transform.scaleY;
 	const cx = canvasWidth / 2 + transform.position.x;
 	const cy = canvasHeight / 2 + transform.position.y;
 
@@ -136,6 +146,7 @@ function getElementBounds({
 			sourceWidth,
 			sourceHeight,
 			transform,
+			scaleMode: readScaleModeFromParams({ params: element.params }),
 		});
 	}
 
@@ -151,6 +162,7 @@ function getElementBounds({
 			sourceWidth: element.intrinsicWidth ?? STICKER_INTRINSIC_SIZE_FALLBACK,
 			sourceHeight: element.intrinsicHeight ?? STICKER_INTRINSIC_SIZE_FALLBACK,
 			transform,
+			scaleMode: readScaleModeFromParams({ params: element.params }),
 		});
 	}
 
@@ -166,6 +178,7 @@ function getElementBounds({
 			sourceWidth: DEFAULT_GRAPHIC_SOURCE_SIZE,
 			sourceHeight: DEFAULT_GRAPHIC_SOURCE_SIZE,
 			transform,
+			scaleMode: readScaleModeFromParams({ params: element.params }),
 		});
 	}
 

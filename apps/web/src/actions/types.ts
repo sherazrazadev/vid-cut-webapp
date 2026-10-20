@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import type { TAction } from "./definitions";
+import { ACTIONS, type TAction } from "./definitions";
 
 export type { TAction };
 
@@ -42,3 +42,17 @@ export type TActionHandlerOptions =
 	| MutableRefObject<boolean>
 	| boolean
 	| undefined;
+
+const REQUIRED_ARG_ACTIONS = new Set<string>([
+	"remove-media-asset",
+	"remove-media-assets",
+]);
+
+export function isActionWithOptionalArgs(
+	value: string,
+): value is TActionWithOptionalArgs {
+	if (!(value in ACTIONS)) {
+		return false;
+	}
+	return !REQUIRED_ARG_ACTIONS.has(value);
+}

@@ -1,6 +1,9 @@
 import { createAuthClient } from "better-auth/react";
-import { webEnv } from "@/env/web";
+
+const baseURL =
+	process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+	"http://localhost:3000";
 
 export const { signIn, signUp, useSession } = createAuthClient({
-	baseURL: webEnv.NEXT_PUBLIC_SITE_URL,
+	baseURL,
 });

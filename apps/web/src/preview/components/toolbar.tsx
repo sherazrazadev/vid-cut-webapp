@@ -8,6 +8,7 @@ import { EditableTimecode } from "@/components/editable-timecode";
 import { Button } from "@/components/ui/button";
 import {
 	FullScreenIcon,
+	GridTableIcon,
 	PauseIcon,
 	PlayIcon,
 } from "@hugeicons/core-free-icons";
@@ -20,26 +21,34 @@ import {
 	SelectItem,
 	SelectSeparator,
 } from "@/components/ui/select";
+import { getGuideById } from "@/guides";
 import { PREVIEW_ZOOM_PRESETS } from "@/preview/zoom";
-import { usePreviewViewport } from "./preview-viewport";
-import { GridPopover } from "./guide-popover";
+import {
+	PREVIEW_QUALITY_OPTIONS,
+	type PreviewQuality,
+} from "@/preview/quality";
 import { usePreviewStore } from "@/preview/preview-store";
 import type { MediaTime } from "@/wasm";
+import { usePreviewViewport } from "./preview-viewport";
+import { GridPopover } from "./guide-popover";
 
 export function PreviewToolbar({
 	onToggleFullscreen,
 }: {
 	onToggleFullscreen: () => void;
 }) {
+	const activeGuide = usePreviewStore((state) => state.activeGuide);
+	const activeGuideDefinition = getGuideById(activeGuide);
+
 	return (
 		<div className="grid grid-cols-[1fr_auto_1fr] items-center pb-3 pt-5 px-5">
 			<TimecodeDisplay />
 			<PlayPauseButton />
 			<div className="justify-self-end flex items-center gap-2.5">
+				<QualitySelect />
 				<ZoomSelect />
 				<Separator orientation="vertical" className="h-4" />
-				{/* v0.4.0 */}
-				{/* <GridPopover>
+				<GridPopover>
 					<Button
 						variant={activeGuideDefinition ? "secondary" : "text"}
 						size="icon"
@@ -50,7 +59,7 @@ export function PreviewToolbar({
 							<HugeiconsIcon icon={GridTableIcon} />
 						)}
 					</Button>
-				</GridPopover> */}
+				</GridPopover>
 				<Button variant="text" onClick={onToggleFullscreen}>
 					<HugeiconsIcon icon={FullScreenIcon} />
 				</Button>
@@ -95,6 +104,30 @@ function TimecodeDisplay() {
 				})}
 			</span>
 		</div>
+	);
+}
+
+function QualitySelect() {
+	const previewQuality = usePreviewStore((state) => state.previewQuality);
+	const setPreviewQuality = usePreviewStore((state) => state.setPreviewQuality);
+
+	return (
+		<Select
+			value={previewQuality}
+			onValueChange={(value) => setPreviewQuality(value as PreviewQuality)}
+		>
+			<SelectTrigger className="min-w-28">
+				{PREVIEW_QUALITY_OPTIONS.find((option) => option.value === previewQuality)
+					?.label ?? "Full"}
+			</SelectTrigger>
+			<SelectContent>
+				{PREVIEW_QUALITY_OPTIONS.map((option) => (
+					<SelectItem key={option.value} value={option.value}>
+						{option.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
 	);
 }
 

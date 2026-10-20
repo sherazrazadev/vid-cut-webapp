@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { isGuideId, type GuideId } from "@/guides";
 import { DEFAULT_GRID_CONFIG } from "@/guides/grid";
 import type { GridConfig } from "@/guides/types";
+import type { PreviewQuality } from "@/preview/quality";
 
 type PreviewOverlaysState = Record<string, boolean>;
 
@@ -13,14 +14,17 @@ interface PersistedPreviewState {
 	};
 	overlays?: PreviewOverlaysState;
 	gridConfig?: GridConfig;
+	previewQuality?: PreviewQuality;
 }
 
 interface PreviewState {
 	activeGuide: GuideId | null;
 	overlays: PreviewOverlaysState;
 	gridConfig: GridConfig;
+	previewQuality: PreviewQuality;
 	toggleGuide: (guideId: GuideId) => void;
 	setGridConfig: (config: Partial<GridConfig>) => void;
+	setPreviewQuality: (quality: PreviewQuality) => void;
 	setOverlayVisibility: ({
 		overlayId,
 		isVisible,
@@ -46,12 +50,17 @@ function getPersistedActiveGuide(
 	return isGuideId(persistedGuide) ? persistedGuide : null;
 }
 
+function isPreviewQuality(value: unknown): value is PreviewQuality {
+	return value === "full" || value === "performance";
+}
+
 export const usePreviewStore = create<PreviewState>()(
 	persist(
 		(set) => ({
 			activeGuide: null,
 			overlays: DEFAULT_PREVIEW_OVERLAYS,
 			gridConfig: DEFAULT_GRID_CONFIG,
+			previewQuality: "full",
 			toggleGuide: (guideId) => {
 				set((state) => ({
 					activeGuide: state.activeGuide === guideId ? null : guideId,
@@ -61,6 +70,9 @@ export const usePreviewStore = create<PreviewState>()(
 				set((state) => ({
 					gridConfig: { ...state.gridConfig, ...config },
 				}));
+			},
+			setPreviewQuality: (quality) => {
+				set({ previewQuality: quality });
 			},
 			setOverlayVisibility: ({ overlayId, isVisible }) => {
 				set((state) => ({
@@ -81,7 +93,7 @@ export const usePreviewStore = create<PreviewState>()(
 		}),
 		{
 			name: "preview-settings",
-			version: 6,
+			version: 7,
 			migrate: (persistedState) => {
 				const state = persistedState as PersistedPreviewState | undefined;
 
@@ -92,12 +104,16 @@ export const usePreviewStore = create<PreviewState>()(
 						rows: state?.gridConfig?.rows ?? DEFAULT_GRID_CONFIG.rows,
 						cols: state?.gridConfig?.cols ?? DEFAULT_GRID_CONFIG.cols,
 					},
+					previewQuality: isPreviewQuality(state?.previewQuality)
+						? state.previewQuality
+						: "full",
 				};
 			},
 			partialize: (state) => ({
 				activeGuide: state.activeGuide,
 				overlays: state.overlays,
 				gridConfig: state.gridConfig,
+				previewQuality: state.previewQuality,
 			}),
 		},
 	),
